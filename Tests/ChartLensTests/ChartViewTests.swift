@@ -109,7 +109,7 @@ import ChartLens
             ChartPoint(x: 4, y: -40),
             ChartPoint(x: 8, y: -40),
         ]
-        let style = ChartSeries.ChartSeriesStyle(
+        let style = ChartSeriesStyle(
             color: .blue,
             lineWidth: 1.5,
             areaOpacity: 0.3,
@@ -119,7 +119,7 @@ import ChartLens
         )
         let series = ChartSeries(id: "test", points: points, style: style)
 
-        #expect(series.style.interpolation == .gaussian(sigma: 1.0, baseline: -100))
+        #expect(series.style.interpolation == Interpolation.gaussian(sigma: 1.0, baseline: -100))
         #expect(series.points.count == 2)
     }
 
@@ -198,6 +198,34 @@ import ChartLens
     }
 
     // MARK: - Axis config with explicit bounds
+
+    @Test func chartAcceptsMixedSeriesTypes() {
+        let lineSeries = ChartSeries(
+            id: "line",
+            points: [ChartPoint(x: 0, y: 0), ChartPoint(x: 1, y: 1)],
+            style: .line(color: .blue)
+        )
+        let candleSeries = ChartSeries(
+            id: "candle",
+            points: [CandlestickPoint(x: 0, open: 10, high: 15, low: 5, close: 12)],
+            style: .init(),
+            renderer: CandlestickRenderer()
+        )
+        let chart = Chart(series: [lineSeries, candleSeries] as [any ChartSeriesProtocol])
+        #expect(chart.series.count == 2)
+    }
+
+    // MARK: - YAxisPosition
+
+    @Test func yAxisPositionDefaultToLeft() {
+        let config = ChartAxisConfig()
+        #expect(config.yAxisPosition == .left)
+    }
+
+    @Test func yAxisPositionCanBeRight() {
+        let config = ChartAxisConfig(yAxisPosition: .right)
+        #expect(config.yAxisPosition == .right)
+    }
 
     @Test func axisBoundsConstrainGeometryComputation() {
         var axis = ChartAxisConfig()

@@ -6,7 +6,7 @@ import SwiftUI
 /// strip with a `RangeSelector` for panning/resizing the window. Domain-agnostic —
 /// works with time, frequency, channel numbers, or any continuous `Double` domain.
 public struct DetailOverviewChart<DetailOverlay: View, OverviewOverlay: View>: View {
-    let series: [ChartSeries]
+    let series: [ChartSeries<ChartPoint>]
     public var domain: ClosedRange<Double> = 0...1
     public var minWindowSpan: Double = 5
     public var defaultWindowSpan: Double = 30
@@ -66,7 +66,7 @@ public struct DetailOverviewChart<DetailOverlay: View, OverviewOverlay: View>: V
         .frame(height: detailHeight)
     }
 
-    private func seriesForWindow(_ window: ClosedRange<Double>) -> [ChartSeries] {
+    private func seriesForWindow(_ window: ClosedRange<Double>) -> [ChartSeries<ChartPoint>] {
         // Axis bounds + clip rect handle the visible window.
         // Pre-filtering points breaks spline interpolation at window boundaries.
         series
@@ -141,7 +141,7 @@ public struct DetailOverviewChart<DetailOverlay: View, OverviewOverlay: View>: V
 
 extension DetailOverviewChart where DetailOverlay == EmptyView, OverviewOverlay == EmptyView {
     public init(
-        series: [ChartSeries],
+        series: [ChartSeries<ChartPoint>],
         domain: ClosedRange<Double> = 0...1,
         minWindowSpan: Double = 5,
         defaultWindowSpan: Double = 30,

@@ -1,11 +1,33 @@
 import SwiftUI
 
+// MARK: - Protocols
+
+public protocol ChartPointProtocol {
+    var x: Double { get }
+    var yRange: (min: Double, max: Double) { get }
+}
+
+public protocol ChartSeriesRenderer<Point> {
+    associatedtype Point: ChartPointProtocol
+    func render(context: inout GraphicsContext, points: [Point], geometry: ChartGeometry, style: ChartSeriesStyle)
+}
+
+public protocol ChartSeriesProtocol<Point> {
+    associatedtype Point: ChartPointProtocol
+    var id: String { get }
+    var points: [Point] { get }
+    var style: ChartSeriesStyle { get }
+    func render(context: inout GraphicsContext, geometry: ChartGeometry)
+}
+
 // MARK: - Chart Point
 
 /// A single data point in chart data-space coordinates.
-public struct ChartPoint {
+public struct ChartPoint: ChartPointProtocol {
     public var x: Double
     public var y: Double
+
+    public var yRange: (min: Double, max: Double) { (y, y) }
 
     public init(x: Double, y: Double) {
         self.x = x
@@ -13,74 +35,120 @@ public struct ChartPoint {
     }
 }
 
+// MARK: - Candlestick Point
+
+public struct CandlestickPoint: ChartPointProtocol {
+    public let x: Double
+    public let open: Double
+    public let high: Double
+    public let low: Double
+    public let close: Double
+
+    public var yRange: (min: Double, max: Double) { (low, high) }
+
+    public init(x: Double, open: Double, high: Double, low: Double, close: Double) {
+        self.x = x
+        self.open = open
+        self.high = high
+        self.low = low
+        self.close = close
+    }
+}
+
+// MARK: - Chart Series Style
+
+public struct ChartSeriesStyle {
+    public var color: Color = .blue
+    public var lineWidth: CGFloat = 1.5
+    public var areaOpacity: Double = 0
+    public var pointRadius: CGFloat = 0
+    public var strokeOpacity: Double = 1.0
+    public var interpolation: Interpolation = .linear
+    public var baseline: Double? = nil
+
+    public init(
+        color: Color = .blue,
+        lineWidth: CGFloat = 1.5,
+        areaOpacity: Double = 0,
+        pointRadius: CGFloat = 0,
+        strokeOpacity: Double = 1.0,
+        interpolation: Interpolation = .linear,
+        baseline: Double? = nil
+    ) {
+        self.color = color
+        self.lineWidth = lineWidth
+        self.areaOpacity = areaOpacity
+        self.pointRadius = pointRadius
+        self.strokeOpacity = strokeOpacity
+        self.interpolation = interpolation
+        self.baseline = baseline
+    }
+
+    public static func area(color: Color, opacity: Double = 0.12, lineWidth: CGFloat = 1.5) -> ChartSeriesStyle {
+        ChartSeriesStyle(color: color, lineWidth: lineWidth, areaOpacity: opacity, interpolation: .linear)
+    }
+
+    public static func line(color: Color, lineWidth: CGFloat = 1.5) -> ChartSeriesStyle {
+        ChartSeriesStyle(color: color, lineWidth: lineWidth, areaOpacity: 0, interpolation: .linear)
+    }
+
+    public static func dots(color: Color, radius: CGFloat = 2) -> ChartSeriesStyle {
+        ChartSeriesStyle(color: color, lineWidth: 0, areaOpacity: 0, pointRadius: radius, interpolation: .linear)
+    }
+}
+
+public enum Interpolation: Equatable {
+    case linear
+    case catmullRom
+    case clampedCubic
+    case step
+    case gaussian(sigma: Double, baseline: Double)
+}
+
 // MARK: - Chart Series
 
 /// One renderable series — points + how to draw them.
-public struct ChartSeries {
+public struct ChartSeries<Point: ChartPointProtocol>: ChartSeriesProtocol {
     public let id: String
-    public var points: [ChartPoint]
+    public var points: [Point]
     public var style: ChartSeriesStyle
+    public var renderer: any ChartSeriesRenderer<Point>
 
-    public init(id: String, points: [ChartPoint], style: ChartSeriesStyle) {
+    public init(id: String, points: [Point], style: ChartSeriesStyle, renderer: any ChartSeriesRenderer<Point>) {
         self.id = id
         self.points = points
         self.style = style
+        self.renderer = renderer
     }
 
-    public struct ChartSeriesStyle {
-        public var color: Color = .blue
-        public var lineWidth: CGFloat = 1.5
-        public var areaOpacity: Double = 0     // 0 = no fill below the curve
-        public var pointRadius: CGFloat = 0    // 0 = no dot markers
-        public var strokeOpacity: Double = 1.0
-        public var interpolation: Interpolation = .linear
-        /// Y value for area fill baseline. nil = chart bottom (geo.chartRect.maxY).
-        public var baseline: Double? = nil
-
-        public init(
-            color: Color = .blue,
-            lineWidth: CGFloat = 1.5,
-            areaOpacity: Double = 0,
-            pointRadius: CGFloat = 0,
-            strokeOpacity: Double = 1.0,
-            interpolation: Interpolation = .linear,
-            baseline: Double? = nil
-        ) {
-            self.color = color
-            self.lineWidth = lineWidth
-            self.areaOpacity = areaOpacity
-            self.pointRadius = pointRadius
-            self.strokeOpacity = strokeOpacity
-            self.interpolation = interpolation
-            self.baseline = baseline
-        }
-
-        public static func area(color: Color, opacity: Double = 0.12, lineWidth: CGFloat = 1.5) -> ChartSeriesStyle {
-            ChartSeriesStyle(color: color, lineWidth: lineWidth, areaOpacity: opacity, interpolation: .linear)
-        }
-
-        public static func line(color: Color, lineWidth: CGFloat = 1.5) -> ChartSeriesStyle {
-            ChartSeriesStyle(color: color, lineWidth: lineWidth, areaOpacity: 0, interpolation: .linear)
-        }
-
-        public static func dots(color: Color, radius: CGFloat = 2) -> ChartSeriesStyle {
-            ChartSeriesStyle(color: color, lineWidth: 0, areaOpacity: 0, pointRadius: radius, interpolation: .linear)
-        }
+    public func render(context: inout GraphicsContext, geometry: ChartGeometry) {
+        renderer.render(context: &context, points: points, geometry: geometry, style: style)
     }
+}
 
-    public enum Interpolation: Equatable {
-        case linear
-        case catmullRom
-        case clampedCubic
-        case step
-        /// Gaussian bell curve — `width` is the sigma, `baseline` is the floor y value.
-        case gaussian(sigma: Double, baseline: Double)
+// Backward compatibility
+extension ChartSeries where Point == ChartPoint {
+    public init(id: String, points: [ChartPoint], style: ChartSeriesStyle) {
+        self.init(id: id, points: points, style: style, renderer: LineRenderer())
     }
+}
+
+extension ChartSeries {
+    public typealias ChartSeriesStyle = ChartLens.ChartSeriesStyle
+    public typealias Interpolation = ChartLens.Interpolation
+}
+
+// MARK: - Y Axis Position
+
+public enum YAxisPosition: Equatable {
+    case left
+    case right
 }
 
 // MARK: - Chart Axis Config
 
 public struct ChartAxisConfig {
+    public var yAxisPosition: YAxisPosition = .left
     public var yMin: Double? = nil       // nil = auto-compute from data
     public var yMax: Double? = nil       // nil = auto-compute from data
     public var xMin: Double? = nil       // nil = auto-compute from data
@@ -102,8 +170,10 @@ public struct ChartAxisConfig {
     public var xTickColor: Color = .secondary
     public var yTickLabel: (Double) -> String = { "\(Int($0))" }
     public var minXTickSpacing: CGFloat = 32   // skip labels closer than this; 0 = draw all
+    public var minYTickSpacing: CGFloat = 24   // skip labels closer than this; 0 = draw all
 
     public init(
+        yAxisPosition: YAxisPosition = .left,
         yMin: Double? = nil,
         yMax: Double? = nil,
         xMin: Double? = nil,
@@ -124,8 +194,10 @@ public struct ChartAxisConfig {
         yTickColor: Color = .secondary,
         xTickColor: Color = .secondary,
         yTickLabel: @escaping (Double) -> String = { "\(Int($0))" },
-        minXTickSpacing: CGFloat = 32
+        minXTickSpacing: CGFloat = 32,
+        minYTickSpacing: CGFloat = 24
     ) {
+        self.yAxisPosition = yAxisPosition
         self.yMin = yMin
         self.yMax = yMax
         self.xMin = xMin
@@ -147,6 +219,7 @@ public struct ChartAxisConfig {
         self.xTickColor = xTickColor
         self.yTickLabel = yTickLabel
         self.minXTickSpacing = minXTickSpacing
+        self.minYTickSpacing = minYTickSpacing
     }
 
     public struct XTick {
@@ -252,13 +325,13 @@ public struct ChartStyle {
 // MARK: - Chart Interaction
 
 public struct ChartInteraction: @unchecked Sendable {
-    public var onHover: (@MainActor (ChartPoint?, CGPoint?) -> Void)?
+    public var onHover: (@MainActor (ChartPoint?, CGPoint?, CGPoint?) -> Void)?
     public var onTap: (@MainActor (ChartPoint?) -> Void)?
     public var onZoom: (@MainActor (Double, Double) -> Void)?
     public var zoomGestureEnabled: Bool = false
 
     public init(
-        onHover: (@MainActor (ChartPoint?, CGPoint?) -> Void)? = nil,
+        onHover: (@MainActor (ChartPoint?, CGPoint?, CGPoint?) -> Void)? = nil,
         onTap: (@MainActor (ChartPoint?) -> Void)? = nil,
         onZoom: (@MainActor (Double, Double) -> Void)? = nil,
         zoomGestureEnabled: Bool = false

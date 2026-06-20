@@ -4,14 +4,14 @@ import SwiftUI
 /// `[ChartSeries]` array. All business-specific overlays (tooltips, labels, heatmaps)
 /// are injected via an overlay ViewBuilder that receives the computed ChartGeometry.
 public struct Chart<Overlay: View>: View {
-    let series: [ChartSeries]
+    let series: [any ChartSeriesProtocol]
     public var axis: ChartAxisConfig = .init()
     public var style: ChartStyle = .init()
     public var interaction: ChartInteraction = .init()
-    @ViewBuilder var overlay: (ChartGeometry, [ChartSeries]) -> Overlay
+    @ViewBuilder var overlay: (ChartGeometry, [any ChartSeriesProtocol]) -> Overlay
 
     public init(
-        series: [ChartSeries],
+        series: [any ChartSeriesProtocol],
         axis: ChartAxisConfig = .init(),
         style: ChartStyle = .init(),
         interaction: ChartInteraction = .init()
@@ -24,11 +24,11 @@ public struct Chart<Overlay: View>: View {
     }
 
     public init(
-        series: [ChartSeries],
+        series: [any ChartSeriesProtocol],
         axis: ChartAxisConfig = .init(),
         style: ChartStyle = .init(),
         interaction: ChartInteraction = .init(),
-        @ViewBuilder overlay: @escaping (ChartGeometry, [ChartSeries]) -> Overlay
+        @ViewBuilder overlay: @escaping (ChartGeometry, [any ChartSeriesProtocol]) -> Overlay
     ) {
         self.series = series
         self.axis = axis
@@ -37,18 +37,20 @@ public struct Chart<Overlay: View>: View {
         self.overlay = overlay
     }
 
-    @State private var hoverScreenPt: CGPoint?
+    @State private var hoverPoint: (any ChartPointProtocol)?
+    @State private var cursorScreenPt: CGPoint?
 
     private var accessibilityDescription: String {
-        let visibleSeries = series.filter { !$0.points.isEmpty && ($0.style.strokeOpacity > 0 || $0.style.areaOpacity > 0 || $0.style.lineWidth > 0) }
+        let visibleSeries = series.filter { !$0.points.isEmpty }
         guard !visibleSeries.isEmpty else { return "Empty chart" }
         let seriesCount = visibleSeries.count
         let pointCount = visibleSeries.reduce(0) { $0 + $1.points.count }
-        guard let allPoints = visibleSeries.flatMap({ $0.points }).map({ $0.y }).min(),
-              let maxY = visibleSeries.flatMap({ $0.points }).map({ $0.y }).max() else {
+        let allRanges = visibleSeries.flatMap { $0.points.map(\.yRange) }
+        guard let minY = allRanges.map(\.min).min(),
+              let maxY = allRanges.map(\.max).max() else {
             return "Chart with \(seriesCount) series"
         }
-        return "Chart with \(seriesCount) series, \(pointCount) data points, values from \(Int(allPoints)) to \(Int(maxY))"
+        return "Chart with \(seriesCount) series, \(pointCount) data points, values from \(Int(minY)) to \(Int(maxY))"
     }
 
     public var body: some View {
@@ -65,19 +67,26 @@ public struct Chart<Overlay: View>: View {
                 overlay(geo, series)
             }
             .contentShape(Rectangle())
+            .onTapGesture(coordinateSpace: .local) { location in
+                guard let (pt, _) = hitTest(location: location, geo: geo) else { return }
+                interaction.onTap?(pt as? ChartPoint)
+            }
             .onContinuousHover(coordinateSpace: .local) { phase in
                 switch phase {
                 case .active(let location):
                     if let (pt, screenPt) = hitTest(location: location, geo: geo) {
-                        hoverScreenPt = screenPt
-                        interaction.onHover?(pt, screenPt)
+                        hoverPoint = pt
+                        cursorScreenPt = location
+                        interaction.onHover?(pt as? ChartPoint, screenPt, location)
                     } else {
-                        hoverScreenPt = nil
-                        interaction.onHover?(nil, nil)
+                        hoverPoint = nil
+                        cursorScreenPt = nil
+                        interaction.onHover?(nil, nil, nil)
                     }
                 case .ended:
-                    hoverScreenPt = nil
-                    interaction.onHover?(nil, nil)
+                    hoverPoint = nil
+                    cursorScreenPt = nil
+                    interaction.onHover?(nil, nil, nil)
                 }
             }
             .simultaneousGesture(
@@ -91,7 +100,25 @@ public struct Chart<Overlay: View>: View {
     // MARK: - Geometry
 
     private func computeGeo(size: CGSize) -> ChartGeometry {
-        let regions = style.regions(size: size)
+        var adjustedStyle = style
+        if axis.showYGrid {
+            let (yMin, yMax) = computeYRange()
+            let step = max(1e-6, axis.yStep)
+            let count = Int(((yMax - yMin) / step).rounded())
+            var maxWidth: CGFloat = 0
+            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 10)]
+            for i in 0...count {
+                let val = yMin + Double(i) * step
+                let w = (axis.yTickLabel(val) as NSString).size(withAttributes: attrs).width
+                maxWidth = max(maxWidth, w)
+            }
+            if axis.yAxisPosition == .right {
+                adjustedStyle.marginRight = max(style.marginRight, maxWidth + axis.yTickLabelOffset + 8)
+            } else {
+                adjustedStyle.leftAxisWidth = max(style.leftAxisWidth, maxWidth + axis.yTickLabelOffset + 8)
+            }
+        }
+        let regions = adjustedStyle.regions(size: size)
         let (yMin, yMax) = computeYRange()
         let xMin = computeXMin()
         let xMax = computeXMax()
@@ -108,9 +135,9 @@ public struct Chart<Overlay: View>: View {
     }
 
     private func computeYRange() -> (Double, Double) {
-        let allY = series.flatMap { $0.points.map(\.y) }
-        let dataMin = allY.min() ?? -100
-        let dataMax = allY.max() ?? 0
+        let allRanges = series.flatMap { $0.points.map(\.yRange) }
+        let dataMin = allRanges.map(\.min).min() ?? -100
+        let dataMax = allRanges.map(\.max).max() ?? 0
         let rawMin = axis.yMin ?? dataMin
         let rawMax = axis.yMax ?? dataMax
         let step = max(1e-6, axis.yStep)
@@ -136,6 +163,7 @@ public struct Chart<Overlay: View>: View {
         if axis.showYGrid {
             let step = max(1e-6, axis.yStep)
             let count = Int(((geo.yMax - geo.yMin) / step).rounded())
+            var lastLabelY: CGFloat = -.greatestFiniteMagnitude
             for i in 0...count {
                 let val = geo.yMin + Double(i) * step
                 let y = rect.maxY - (val - geo.yMin) * geo.scaleY
@@ -143,10 +171,17 @@ public struct Chart<Overlay: View>: View {
                 line.move(to: CGPoint(x: rect.minX, y: y))
                 line.addLine(to: CGPoint(x: rect.maxX, y: y))
                 context.stroke(line, with: .color(axis.gridColor), lineWidth: 1)
-                context.draw(
-                    Text(axis.yTickLabel(val)).font(axis.yTickFont).foregroundColor(axis.yTickColor),
-                    at: CGPoint(x: rect.minX - axis.yTickLabelOffset, y: y)
-                )
+                if axis.minYTickSpacing > 0, abs(y - lastLabelY) < axis.minYTickSpacing { continue }
+                lastLabelY = y
+                let label = Text(axis.yTickLabel(val)).font(axis.yTickFont).foregroundColor(axis.yTickColor)
+                let w = context.resolve(label).measure(in: CGSize(width: 200, height: 30)).width
+                let labelX: CGFloat
+                if axis.yAxisPosition == .right {
+                    labelX = rect.maxX + axis.yTickLabelOffset + w / 2
+                } else {
+                    labelX = max(w / 2 + 4, rect.minX - axis.yTickLabelOffset - w / 2)
+                }
+                context.draw(label, at: CGPoint(x: labelX, y: y))
             }
         }
 
@@ -168,7 +203,8 @@ public struct Chart<Overlay: View>: View {
             context.stroke(p, with: .color(axis.axisColor), lineWidth: 1)
         }
         if axis.showYAxis {
-            var p = Path(); p.move(to: CGPoint(x: rect.minX, y: rect.minY)); p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            let axisX = axis.yAxisPosition == .right ? rect.maxX : rect.minX
+            var p = Path(); p.move(to: CGPoint(x: axisX, y: rect.minY)); p.addLine(to: CGPoint(x: axisX, y: rect.maxY))
             context.stroke(p, with: .color(axis.axisColor), lineWidth: 1)
         }
 
@@ -176,120 +212,23 @@ public struct Chart<Overlay: View>: View {
         if axis.clipToRect { context.clip(to: Path(rect)) }
 
         // Series
-        for s in series where s.points.count >= 2 {
-            drawSeries(context: &context, series: s, geo: geo)
-        }
-    }
-
-    // MARK: - Series Drawing
-
-    private func drawSeries(context: inout GraphicsContext, series: ChartSeries, geo: ChartGeometry) {
-        switch series.style.interpolation {
-        case .linear, .step:
-            drawPolyline(context: &context, series: series, geo: geo, stepped: series.style.interpolation == .step)
-        case .catmullRom:
-            let pts = series.points.map { geo.dataToPoint(x: $0.x, y: $0.y) }
-            drawCurvePath(context: &context, curve: catmullRomSpline(points: pts), series: series, style: series.style, geo: geo)
-        case .clampedCubic:
-            let pts = series.points.map { geo.dataToPoint(x: $0.x, y: $0.y) }
-            drawCurvePath(context: &context, curve: clampedCubicSpline(points: pts), series: series, style: series.style, geo: geo)
-        case .gaussian(let sigma, let baseline):
-            drawGaussianCurve(context: &context, series: series, style: series.style, geo: geo, sigma: sigma, baseline: baseline)
-        }
-    }
-
-    private func drawPolyline(context: inout GraphicsContext, series: ChartSeries, geo: ChartGeometry, stepped: Bool) {
-        let pts = series.points; let sty = series.style
-        var line = Path(); var prevSY: CGFloat = 0
-        for (i, pt) in pts.enumerated() {
-            let sx = geo.chartRect.minX + (pt.x - geo.xMin) * geo.scaleX
-            let sy = geo.chartRect.maxY - (pt.y - geo.yMin) * geo.scaleY
-            if stepped, i > 0 { line.addLine(to: CGPoint(x: sx, y: prevSY)) }
-            if i == 0 { line.move(to: CGPoint(x: sx, y: sy)) } else { line.addLine(to: CGPoint(x: sx, y: sy)) }
-            prevSY = sy
-        }
-
-        if sty.areaOpacity > 0 {
-            let fillY = sty.baseline.map { geo.chartRect.maxY - ($0 - geo.yMin) * geo.scaleY } ?? geo.chartRect.maxY
-            let lx = geo.chartRect.minX + (pts.last!.x - geo.xMin) * geo.scaleX
-            let fx = geo.chartRect.minX + (pts.first!.x - geo.xMin) * geo.scaleX
-            var fill = line
-            fill.addLine(to: CGPoint(x: lx, y: fillY))
-            fill.addLine(to: CGPoint(x: fx, y: fillY))
-            fill.closeSubpath()
-            context.fill(fill, with: .color(sty.color.opacity(sty.areaOpacity)))
-        }
-        if sty.lineWidth > 0, sty.strokeOpacity > 0 {
-            context.stroke(line, with: .color(sty.color.opacity(sty.strokeOpacity)), lineWidth: sty.lineWidth)
-        }
-        if sty.pointRadius > 0 {
-            let r = sty.pointRadius
-            for pt in pts {
-                let sx = geo.chartRect.minX + (pt.x - geo.xMin) * geo.scaleX
-                let sy = geo.chartRect.maxY - (pt.y - geo.yMin) * geo.scaleY
-                context.fill(Path(ellipseIn: CGRect(x: sx - r, y: sy - r, width: r * 2, height: r * 2)), with: .color(sty.color))
-            }
-        }
-    }
-
-    private func drawCurvePath(context: inout GraphicsContext, curve: Path, series: ChartSeries, style: ChartSeries.ChartSeriesStyle, geo: ChartGeometry) {
-        let pts = series.points
-        if style.areaOpacity > 0 {
-            let fillY = style.baseline.map { geo.chartRect.maxY - ($0 - geo.yMin) * geo.scaleY } ?? geo.chartRect.maxY
-            let lx = geo.chartRect.minX + (pts.last!.x - geo.xMin) * geo.scaleX
-            let fx = geo.chartRect.minX + (pts.first!.x - geo.xMin) * geo.scaleX
-            var fill = curve
-            fill.addLine(to: CGPoint(x: lx, y: fillY)); fill.addLine(to: CGPoint(x: fx, y: fillY))
-            fill.closeSubpath()
-            context.fill(fill, with: .color(style.color.opacity(style.areaOpacity)))
-        }
-        if style.lineWidth > 0, style.strokeOpacity > 0 {
-            context.stroke(curve, with: .color(style.color.opacity(style.strokeOpacity)), lineWidth: style.lineWidth)
-        }
-    }
-
-    private func drawGaussianCurve(context: inout GraphicsContext, series: ChartSeries, style: ChartSeries.ChartSeriesStyle, geo: ChartGeometry, sigma: Double, baseline: Double) {
-        guard let first = series.points.first, let last = series.points.last else { return }
-        let center = (first.x + last.x) / 2.0
-        // The first point's y is the peak RSSI; amplitude is peak minus baseline
-        let amplitude = max(0, first.y - baseline)
-        let steps = 80
-
-        var topPts: [CGPoint] = []; var full = Path()
-        for i in 0...steps {
-            let x = first.x + (last.x - first.x) * Double(i) / Double(steps)
-            let g = exp(-((x - center) * (x - center)) / (2 * sigma * sigma))
-            let y = baseline + amplitude * g
-            let pt = geo.dataToPoint(x: x, y: y)
-            topPts.append(pt)
-            if i == 0 { full.move(to: pt) } else { full.addLine(to: pt) }
-        }
-        full.addLine(to: geo.dataToPoint(x: last.x, y: baseline))
-        full.addLine(to: geo.dataToPoint(x: first.x, y: baseline))
-        full.closeSubpath()
-
-        if style.areaOpacity > 0 { context.fill(full, with: .color(style.color.opacity(style.areaOpacity))) }
-        if style.lineWidth > 0, style.strokeOpacity > 0 {
-            var top = Path(); top.move(to: topPts[0]); for pt in topPts.dropFirst() { top.addLine(to: pt) }
-            context.stroke(top, with: .color(style.color.opacity(style.strokeOpacity)), lineWidth: style.lineWidth)
+        for s in series {
+            s.render(context: &context, geometry: geo)
         }
     }
 
     // MARK: - Hit Testing
 
-    private func hitTest(location: CGPoint, geo: ChartGeometry) -> (ChartPoint, CGPoint)? {
+    private func hitTest(location: CGPoint, geo: ChartGeometry) -> (any ChartPointProtocol, CGPoint)? {
         guard geo.chartRect.contains(location) else { return nil }
-        let radius: CGFloat = 20
-        var best: (ChartPoint, CGPoint)?
-        var bestDist: CGFloat = radius
+        var best: (any ChartPointProtocol, CGPoint)?
+        var bestDx: CGFloat = .greatestFiniteMagnitude
 
-        for s in series where s.points.count >= 1 {
+        for s in series {
             for pt in s.points {
-                let screen = geo.dataToPoint(x: pt.x, y: pt.y)
-                let dx = screen.x - location.x
-                let dy = screen.y - location.y
-                let dist = sqrt(dx * dx + dy * dy)
-                if dist < bestDist { bestDist = dist; best = (pt, screen) }
+                let screen = geo.dataToPoint(x: pt.x, y: pt.yRange.min)
+                let dx = abs(screen.x - location.x)
+                if dx < bestDx { bestDx = dx; best = (pt, screen) }
             }
         }
         return best
@@ -309,5 +248,23 @@ public struct Chart<Overlay: View>: View {
                 let hi = geo.xMin + (relEnd / geo.chartRect.width) * (geo.xMax - geo.xMin)
                 interaction.onZoom?(lo, hi)
             }
+    }
+}
+
+extension Chart where Overlay == CrosshairOverlay {
+    public init(
+        series: [any ChartSeriesProtocol],
+        axis: ChartAxisConfig = .init(),
+        style: ChartStyle = .init(),
+        interaction: ChartInteraction = .init(),
+        crosshair: CrosshairConfig
+    ) {
+        self.series = series
+        self.axis = axis
+        self.style = style
+        self.interaction = interaction
+        self.overlay = { geo, _ in
+            CrosshairOverlay(geometry: geo, hoverPoint: nil, config: crosshair)
+        }
     }
 }
