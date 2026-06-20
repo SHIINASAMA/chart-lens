@@ -19,7 +19,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/user/ChartLens.git", from: "1.0.0")
+    .package(url: "https://github.com/SHIINASAMA/chart-lens.git", from: "1.0.0")
 ]
 ```
 
@@ -163,7 +163,3 @@ Open `ChartLensDemo/ChartLensDemo.xcodeproj` in Xcode. The demo app includes:
 - **Detail + Overview** — linked chart with RangeSelector
 - **Interactions** — hover, tap, zoom gesture
 - **Custom Overlays** — tooltip, data labels, threshold line
-
-## License
-
-MIT
