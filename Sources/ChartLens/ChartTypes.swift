@@ -2,17 +2,23 @@ import SwiftUI
 
 // MARK: - Protocols
 
-public protocol ChartPointProtocol {
+public protocol ChartPointProtocol: Sendable {
     var x: Double { get }
     var yRange: (min: Double, max: Double) { get }
+    /// The Y value used for hit-test screen positioning. Defaults to yRange.min.
+    var displayY: Double { get }
 }
 
-public protocol ChartSeriesRenderer<Point> {
+extension ChartPointProtocol {
+    public var displayY: Double { yRange.min }
+}
+
+public protocol ChartSeriesRenderer<Point>: Sendable {
     associatedtype Point: ChartPointProtocol
     func render(context: inout GraphicsContext, points: [Point], geometry: ChartGeometry, style: ChartSeriesStyle)
 }
 
-public protocol ChartSeriesProtocol<Point> {
+public protocol ChartSeriesProtocol<Point>: Sendable {
     associatedtype Point: ChartPointProtocol
     var id: String { get }
     var points: [Point] { get }
@@ -45,6 +51,7 @@ public struct CandlestickPoint: ChartPointProtocol {
     public let close: Double
 
     public var yRange: (min: Double, max: Double) { (low, high) }
+    public var displayY: Double { close }
 
     public init(x: Double, open: Double, high: Double, low: Double, close: Double) {
         self.x = x
@@ -57,7 +64,7 @@ public struct CandlestickPoint: ChartPointProtocol {
 
 // MARK: - Chart Series Style
 
-public struct ChartSeriesStyle {
+public struct ChartSeriesStyle: Sendable {
     public var color: Color = .blue
     public var lineWidth: CGFloat = 1.5
     public var areaOpacity: Double = 0
@@ -97,7 +104,7 @@ public struct ChartSeriesStyle {
     }
 }
 
-public enum Interpolation: Equatable {
+public enum Interpolation: Equatable, Sendable {
     case linear
     case catmullRom
     case clampedCubic
@@ -324,15 +331,16 @@ public struct ChartStyle {
 
 // MARK: - Chart Interaction
 
+/// Interaction callbacks for Chart. All closures run on @MainActor.
 public struct ChartInteraction: @unchecked Sendable {
-    public var onHover: (@MainActor (ChartPoint?, CGPoint?, CGPoint?) -> Void)?
-    public var onTap: (@MainActor (ChartPoint?) -> Void)?
+    public var onHover: (@MainActor ((any ChartPointProtocol)?, CGPoint?, CGPoint?) -> Void)?
+    public var onTap: (@MainActor ((any ChartPointProtocol)?) -> Void)?
     public var onZoom: (@MainActor (Double, Double) -> Void)?
     public var zoomGestureEnabled: Bool = false
 
     public init(
-        onHover: (@MainActor (ChartPoint?, CGPoint?, CGPoint?) -> Void)? = nil,
-        onTap: (@MainActor (ChartPoint?) -> Void)? = nil,
+        onHover: (@MainActor ((any ChartPointProtocol)?, CGPoint?, CGPoint?) -> Void)? = nil,
+        onTap: (@MainActor ((any ChartPointProtocol)?) -> Void)? = nil,
         onZoom: (@MainActor (Double, Double) -> Void)? = nil,
         zoomGestureEnabled: Bool = false
     ) {

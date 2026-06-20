@@ -2,8 +2,8 @@ import SwiftUI
 import ChartLens
 
 struct InteractionsDemo: View {
-    @State private var hoverPoint: ChartPoint?
-    @State private var tapPoint: ChartPoint?
+    @State private var hoverPoint: (any ChartPointProtocol)?
+    @State private var tapPoint: (any ChartPointProtocol)?
     @State private var zoomRange: (Double, Double)?
     @State private var zoomEnabled = false
 
@@ -38,7 +38,7 @@ struct InteractionsDemo: View {
         HStack(spacing: 20) {
             Label {
                 if let p = hoverPoint {
-                    Text("x: \(String(format: "%.1f", p.x)), y: \(String(format: "%.1f", p.y))")
+                    Text("x: \(String(format: "%.1f", p.x)), y: \(String(format: "%.1f", p.displayY))")
                 } else {
                     Text("Hover over chart")
                 }
@@ -50,7 +50,7 @@ struct InteractionsDemo: View {
 
             Label {
                 if let p = tapPoint {
-                    Text("Tapped: (\(String(format: "%.1f", p.x)), \(String(format: "%.1f", p.y)))")
+                    Text("Tapped: (\(String(format: "%.1f", p.x)), \(String(format: "%.1f", p.displayY)))")
                 } else {
                     Text("Click to select")
                 }

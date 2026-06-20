@@ -39,6 +39,7 @@ public struct Chart<Overlay: View>: View {
 
     @State private var hoverPoint: (any ChartPointProtocol)?
     @State private var cursorScreenPt: CGPoint?
+    @State private var internalTapPoint: (any ChartPointProtocol)?
 
     private var accessibilityDescription: String {
         let visibleSeries = series.filter { !$0.points.isEmpty }
@@ -69,7 +70,7 @@ public struct Chart<Overlay: View>: View {
             .contentShape(Rectangle())
             .onTapGesture(coordinateSpace: .local) { location in
                 guard let (pt, _) = hitTest(location: location, geo: geo) else { return }
-                interaction.onTap?(pt as? ChartPoint)
+                interaction.onTap?(pt)
             }
             .onContinuousHover(coordinateSpace: .local) { phase in
                 switch phase {
@@ -77,7 +78,7 @@ public struct Chart<Overlay: View>: View {
                     if let (pt, screenPt) = hitTest(location: location, geo: geo) {
                         hoverPoint = pt
                         cursorScreenPt = location
-                        interaction.onHover?(pt as? ChartPoint, screenPt, location)
+                        interaction.onHover?(pt, screenPt, location)
                     } else {
                         hoverPoint = nil
                         cursorScreenPt = nil
@@ -226,7 +227,7 @@ public struct Chart<Overlay: View>: View {
 
         for s in series {
             for pt in s.points {
-                let screen = geo.dataToPoint(x: pt.x, y: pt.yRange.min)
+                let screen = geo.dataToPoint(x: pt.x, y: pt.displayY)
                 let dx = abs(screen.x - location.x)
                 if dx < bestDx { bestDx = dx; best = (pt, screen) }
             }
@@ -252,6 +253,9 @@ public struct Chart<Overlay: View>: View {
 }
 
 extension Chart where Overlay == CrosshairOverlay {
+    /// Convenience init that creates a crosshair overlay with no internal hover state.
+    /// The caller is responsible for wiring up hover state via ChartInteraction.onHover
+    /// and passing hoverPoint/cursorScreenX to CrosshairOverlay.
     public init(
         series: [any ChartSeriesProtocol],
         axis: ChartAxisConfig = .init(),

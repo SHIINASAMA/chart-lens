@@ -3,13 +3,13 @@ import SwiftUI
 /// A crosshair overlay with a vertical line at cursor X, data point highlight, and value labels.
 public struct CrosshairOverlay: View {
     let geometry: ChartGeometry
-    let hoverPoint: ChartPoint?
+    let hoverPoint: (any ChartPointProtocol)?
     let cursorScreenX: CGFloat?
     let config: CrosshairConfig
 
     public init(
         geometry: ChartGeometry,
-        hoverPoint: ChartPoint?,
+        hoverPoint: (any ChartPointProtocol)?,
         cursorScreenX: CGFloat? = nil,
         config: CrosshairConfig = .init()
     ) {
@@ -21,7 +21,8 @@ public struct CrosshairOverlay: View {
 
     public var body: some View {
         Canvas { context, _ in
-            guard let cursorX = cursorScreenX ?? hoverPoint.map({ geometry.dataToPoint(x: $0.x, y: $0.y).x })
+            guard let cursorX = cursorScreenX
+                    ?? hoverPoint.map({ geometry.dataToPoint(x: $0.x, y: $0.displayY).x })
             else { return }
 
             let lineX = clamp(cursorX, to: geometry.chartRect)
@@ -34,7 +35,7 @@ public struct CrosshairOverlay: View {
 
             // Data point
             if let point = hoverPoint {
-                let screenPt = geometry.dataToPoint(x: point.x, y: point.y)
+                let screenPt = geometry.dataToPoint(x: point.x, y: point.displayY)
                 let r = config.pointRadius
                 let circleRect = CGRect(x: screenPt.x - r, y: screenPt.y - r, width: r * 2, height: r * 2)
                 context.fill(Path(ellipseIn: circleRect), with: .color(config.pointColor))
@@ -42,31 +43,32 @@ public struct CrosshairOverlay: View {
 
                 // Value label with gradient background
                 if config.showValueLabel {
-                    let valueStr = String(format: "%.3f", point.y)
+                    let valueStr = config.valueLabelFormatter(point.displayY)
                     let valueText = Text(valueStr)
                         .font(config.valueLabelFont)
                         .foregroundColor(config.valueLabelColor)
                     let resolved = context.resolve(valueText)
-                    let textSize = resolved.measure(in: CGSize(width: 200, height: 30))
+                    let textSize = resolved.measure(in: CGSize(width: 500, height: 100))
 
                     let pad: CGFloat = 6
                     let labelW = textSize.width + pad * 2
                     let labelH = textSize.height + pad * 2 + 8 // extra room below for fade
-                    let labelX = clamp(screenPt.x - labelW / 2, to: labelW / 2, geometry.chartRect.maxX - labelW / 2)
+                    let labelX = clamp(screenPt.x,
+                                       to: geometry.chartRect.minX + labelW / 2,
+                                       geometry.chartRect.maxX - labelW / 2)
                     let labelY = geometry.chartRect.minY + 4
 
-                    // Gradient: opaque at top, transparent at bottom
+                    let bgColor = config.valueLabelBackgroundColor
                     let gradient = GraphicsContext.Shading.linearGradient(
                         Gradient(colors: [
-                            Color.black.opacity(0.7),
-                            Color.black.opacity(0.7),
-                            Color.black.opacity(0.0)
+                            bgColor.opacity(0.7),
+                            bgColor.opacity(0.0)
                         ]),
                         startPoint: CGPoint(x: 0, y: 0),
                         endPoint: CGPoint(x: 0, y: 1)
                     )
-                    let roundedRect = Path(roundedRect: CGRect(x: labelX - labelW / 2, y: labelY, width: labelW, height: labelH), cornerRadius: 6)
-                    context.fill(roundedRect, with: gradient)
+                    let rect = CGRect(x: labelX - labelW / 2, y: labelY, width: labelW, height: labelH)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 6), with: gradient)
 
                     let textY = geometry.chartRect.minY + pad + textSize.height / 2 + 4
                     context.draw(valueText, at: CGPoint(x: labelX, y: textY))

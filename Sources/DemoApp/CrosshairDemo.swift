@@ -2,7 +2,7 @@ import SwiftUI
 import ChartLens
 
 struct CrosshairDemo: View {
-    @State private var hoverPoint: ChartPoint?
+    @State private var hoverPoint: (any ChartPointProtocol)?
     @State private var cursorX: CGFloat?
 
     private let points: [ChartPoint] = {

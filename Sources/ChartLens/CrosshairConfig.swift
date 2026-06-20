@@ -12,6 +12,8 @@ public struct CrosshairConfig {
     public var showXLabel: Bool
     public var xLabelFont: Font
     public var xLabelColor: Color
+    public var valueLabelFormatter: (Double) -> String
+    public var valueLabelBackgroundColor: Color
 
     public init(
         lineColor: Color = .secondary,
@@ -23,7 +25,9 @@ public struct CrosshairConfig {
         valueLabelColor: Color = .primary,
         showXLabel: Bool = true,
         xLabelFont: Font = .caption2,
-        xLabelColor: Color = .secondary
+        xLabelColor: Color = .secondary,
+        valueLabelFormatter: @escaping (Double) -> String = { String(format: "%.3f", $0) },
+        valueLabelBackgroundColor: Color = .black
     ) {
         self.lineColor = lineColor
         self.lineWidth = lineWidth
@@ -35,5 +39,7 @@ public struct CrosshairConfig {
         self.showXLabel = showXLabel
         self.xLabelFont = xLabelFont
         self.xLabelColor = xLabelColor
+        self.valueLabelFormatter = valueLabelFormatter
+        self.valueLabelBackgroundColor = valueLabelBackgroundColor
     }
 }
