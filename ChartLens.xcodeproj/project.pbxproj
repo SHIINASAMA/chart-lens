@@ -91,7 +91,8 @@
 		AA0000012FE6A00000000012 /* CrosshairOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosshairOverlay.swift; sourceTree = "<group>"; };
 		AA0000012FE6A00000000014 /* CrosshairTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosshairTests.swift; sourceTree = "<group>"; };
 		FB1B78452FE649F600A5F039 /* ChartLens.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ChartLens.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB1B78462FE649F600A5F039 /* ChartLensTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ChartLensTests.xctest; path = "/Users/kaoru/Developer/wifi-lens/ChartLens/build/Debug/ChartLensTests.xctest"; sourceTree = "<absolute>"; };
+		FB3608952FE780AC00C9ACF2 /* ChartLensTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChartLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB3608962FE780AC00C9ACF2 /* DemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DemoApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB85B8A52FE6517800D2D391 /* ChartLens-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ChartLens-Info.plist"; sourceTree = "<group>"; };
 		FB85B8AA2FE69A1200D2D391 /* BasicChartsDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicChartsDemo.swift; sourceTree = "<group>"; };
 		FB85B8AB2FE69A1200D2D391 /* DemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
@@ -99,7 +100,6 @@
 		FB85B8AD2FE69A1200D2D391 /* InteractionsDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsDemo.swift; sourceTree = "<group>"; };
 		FB85B8AE2FE69A1200D2D391 /* InterpolationDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpolationDemo.swift; sourceTree = "<group>"; };
 		FB85B8AF2FE69A1200D2D391 /* OverlayDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayDemo.swift; sourceTree = "<group>"; };
-		FB85B8B52FE69A6600D2D391 /* DemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = DemoApp.app; path = "/Users/kaoru/Developer/wifi-lens/ChartLens/build/Debug/DemoApp.app"; sourceTree = "<absolute>"; };
 		FBE3DEFF2FE6444F00960724 /* ChartGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartGeometry.swift; sourceTree = "<group>"; };
 		FBE3DF002FE6444F00960724 /* ChartRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartRendering.swift; sourceTree = "<group>"; };
 		FBE3DF012FE6444F00960724 /* ChartTimeFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartTimeFormatting.swift; sourceTree = "<group>"; };
@@ -139,6 +139,7 @@
 				FBE3DF092FE6444F00960724 /* Sources */,
 				FBE3DF162FE6447100960724 /* Tests */,
 				FB85B8C72FE69BAF00D2D391 /* Frameworks */,
+				FB3608962FE780AC00C9ACF2 /* DemoApp.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -210,6 +211,7 @@
 		FBE3DF162FE6447100960724 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				FB3608952FE780AC00C9ACF2 /* ChartLensTests.xctest */,
 				FBE3DF152FE6447100960724 /* ChartLensTests */,
 			);
 			path = Tests;
@@ -235,7 +237,7 @@
 			packageProductDependencies = (
 			);
 			productName = ChartLensTests;
-			productReference = FB1B78462FE649F600A5F039 /* ChartLensTests.xctest */;
+			productReference = FB3608952FE780AC00C9ACF2 /* ChartLensTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FA828638A62203D380D8D9D4 /* ChartLens */ = {
@@ -273,7 +275,7 @@
 			packageProductDependencies = (
 			);
 			productName = DemoApp;
-			productReference = FB85B8B52FE69A6600D2D391 /* DemoApp.app */;
+			productReference = FB3608962FE780AC00C9ACF2 /* DemoApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
