@@ -18,7 +18,7 @@ struct OverlayDemo: View {
             ChartPoint(x: $0, y: -50 - 20 * sin($0 / 10))
         }
         let series = [ChartSeries(id: "data", points: points, style: .line(color: .blue))]
-        let allPoints = series.flatMap { $0.points.compactMap { $0 as? ChartPoint } }
+        let allPoints = series.flatMap(\.points)
         return Chart(
             series: series,
             axis: ChartAxisConfig(yMin: -80, yMax: -20, yStep: 10)
@@ -34,7 +34,7 @@ struct OverlayDemo: View {
             ChartPoint(x: 40, y: -35),
         ]
         let series = [ChartSeries(id: "peaks", points: points, style: .line(color: .green))]
-        let allPoints = series.flatMap { $0.points.compactMap { $0 as? ChartPoint } }
+        let allPoints = series.flatMap(\.points)
         return Chart(
             series: series,
             axis: ChartAxisConfig(yMin: -80, yMax: -20, yStep: 10)
