@@ -76,28 +76,35 @@ public struct LineRenderer: ChartSeriesRenderer<ChartPoint> {
         let amplitude = max(0, first.y - baseline)
         let steps = 80
 
-        var topPts: [CGPoint] = []
-        var full = Path()
+        // Build curve points
+        var curvePts: [CGPoint] = []
         for i in 0...steps {
             let x = first.x + (last.x - first.x) * Double(i) / Double(steps)
             let g = exp(-((x - center) * (x - center)) / (2 * sigma * sigma))
             let y = baseline + amplitude * g
-            let pt = geometry.dataToPoint(x: x, y: y)
-            topPts.append(pt)
-            if i == 0 { full.move(to: pt) } else { full.addLine(to: pt) }
+            curvePts.append(geometry.dataToPoint(x: x, y: y))
         }
-        full.addLine(to: geometry.dataToPoint(x: last.x, y: baseline))
-        full.addLine(to: geometry.dataToPoint(x: first.x, y: baseline))
-        full.closeSubpath()
 
-        if style.areaOpacity > 0 {
-            context.fill(full, with: .color(style.color.opacity(style.areaOpacity)))
-        }
+        let leftBase = geometry.dataToPoint(x: first.x, y: baseline)
+        let rightBase = geometry.dataToPoint(x: last.x, y: baseline)
+
+        // Stroke: open curve path, ends at baseline
         if style.lineWidth > 0, style.strokeOpacity > 0 {
-            var top = Path()
-            top.move(to: topPts[0])
-            for pt in topPts.dropFirst() { top.addLine(to: pt) }
-            context.stroke(top, with: .color(style.color.opacity(style.strokeOpacity)), lineWidth: style.lineWidth)
+            var stroke = Path()
+            stroke.move(to: leftBase)
+            for pt in curvePts { stroke.addLine(to: pt) }
+            stroke.addLine(to: rightBase)
+            context.stroke(stroke, with: .color(style.color.opacity(style.strokeOpacity)), lineWidth: style.lineWidth)
+        }
+
+        // Fill: closed path (curve + baseline)
+        if style.areaOpacity > 0 {
+            var fill = Path()
+            fill.move(to: leftBase)
+            for pt in curvePts { fill.addLine(to: pt) }
+            fill.addLine(to: rightBase)
+            fill.closeSubpath()
+            context.fill(fill, with: .color(style.color.opacity(style.areaOpacity)))
         }
     }
 }

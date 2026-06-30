@@ -158,7 +158,7 @@ SwiftUI's `onChange(of:)` fires **after** `body` computation. When `DetailOvervi
 
 Open `ChartLens.xcodeproj` in Xcode and run the **DemoApp** scheme. The sidebar groups demos into sections:
 
-- **Chart Types** — basic charts (line, area, dot, step), candlestick
+- **Chart Types** — basic charts (line, area, dot, step), candlestick, gaussian spectrum
 - **Interpolation** — 5 interpolation modes, spline overshoot comparison
 - **Interaction** — hover & tap callbacks, crosshair overlay
 - **Composition** — detail + overview, custom overlays

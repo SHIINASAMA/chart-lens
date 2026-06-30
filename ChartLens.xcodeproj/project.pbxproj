@@ -18,6 +18,7 @@
 		AA0000012FE6A00000000011 /* CrosshairOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000012FE6A00000000012 /* CrosshairOverlay.swift */; };
 		AA0000012FE6A00000000013 /* CrosshairTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000012FE6A00000000014 /* CrosshairTests.swift */; };
 		AA0000012FE6A00000000015 /* SplineOvershootDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000012FE6A00000000016 /* SplineOvershootDemo.swift */; };
+		AA0000012FE6A00000000017 /* GaussianDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000012FE6A00000000018 /* GaussianDemo.swift */; };
 		FB85B8C02FE69A7900D2D391 /* BasicChartsDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85B8AA2FE69A1200D2D391 /* BasicChartsDemo.swift */; };
 		FB85B8C12FE69A7900D2D391 /* DemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85B8AB2FE69A1200D2D391 /* DemoApp.swift */; };
 		FB85B8C22FE69A7900D2D391 /* InterpolationDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85B8AE2FE69A1200D2D391 /* InterpolationDemo.swift */; };
@@ -92,6 +93,7 @@
 		AA0000012FE6A00000000012 /* CrosshairOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosshairOverlay.swift; sourceTree = "<group>"; };
 		AA0000012FE6A00000000014 /* CrosshairTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosshairTests.swift; sourceTree = "<group>"; };
 		AA0000012FE6A00000000016 /* SplineOvershootDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplineOvershootDemo.swift; sourceTree = "<group>"; };
+		AA0000012FE6A00000000018 /* GaussianDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaussianDemo.swift; sourceTree = "<group>"; };
 		FB1B78452FE649F600A5F039 /* ChartLens.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ChartLens.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB3608952FE780AC00C9ACF2 /* ChartLensTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChartLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB3608962FE780AC00C9ACF2 /* DemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DemoApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -157,6 +159,7 @@
 				FB85B8AE2FE69A1200D2D391 /* InterpolationDemo.swift */,
 				FB85B8AF2FE69A1200D2D391 /* OverlayDemo.swift */,
 				AA0000012FE6A00000000016 /* SplineOvershootDemo.swift */,
+				AA0000012FE6A00000000018 /* GaussianDemo.swift */,
 			);
 			path = DemoApp;
 			sourceTree = "<group>";
@@ -374,6 +377,7 @@
 				FB85B8C42FE69A7900D2D391 /* OverlayDemo.swift in Sources */,
 				FB85B8C52FE69A7900D2D391 /* DetailOverviewDemo.swift in Sources */,
 				AA0000012FE6A00000000015 /* SplineOvershootDemo.swift in Sources */,
+				AA0000012FE6A00000000017 /* GaussianDemo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

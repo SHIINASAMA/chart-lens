@@ -54,6 +54,7 @@ enum DemoPage: String, CaseIterable {
     // Chart Types
     case basicCharts = "Basic Charts"
     case candlestick = "Candlestick"
+    case gaussian = "Gaussian Spectrum"
 
     // Interpolation
     case interpolation = "Interpolation Modes"
@@ -73,6 +74,7 @@ enum DemoPage: String, CaseIterable {
         switch self {
         case .basicCharts: "chart.line.uptrend.xyaxis"
         case .candlestick: "chart.bar.doc.horizontal"
+        case .gaussian: "waveform.path.ecg"
         case .interpolation: "waveform.path"
         case .splineOvershoot: "arrow.triangle.branch"
         case .interactions: "cursorarrow.click.2"
@@ -84,7 +86,7 @@ enum DemoPage: String, CaseIterable {
 
     // MARK: - Groups
 
-    static let chartTypePages: [DemoPage] = [.basicCharts, .candlestick]
+    static let chartTypePages: [DemoPage] = [.basicCharts, .candlestick, .gaussian]
     static let interpolationPages: [DemoPage] = [.interpolation, .splineOvershoot]
     static let interactionPages: [DemoPage] = [.interactions, .crosshair]
     static let compositionPages: [DemoPage] = [.detailOverview, .overlays]
@@ -93,6 +95,7 @@ enum DemoPage: String, CaseIterable {
         switch self {
         case .basicCharts: BasicChartsDemo()
         case .candlestick: CandlestickDemo()
+        case .gaussian: GaussianDemo()
         case .interpolation: InterpolationDemo()
         case .splineOvershoot: SplineOvershootDemo()
         case .interactions: InteractionsDemo()

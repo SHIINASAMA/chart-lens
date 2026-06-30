@@ -15,6 +15,7 @@ The DemoApp is a macOS app inside the ChartLens Xcode project. It contains inter
 |------|------|---------|-------------|
 | BasicCharts | `BasicChartsDemo.swift` | Chart Types | Line, area, dot, step, multi-series, custom axis |
 | Candlestick | `CandlestickDemo.swift` | Chart Types | OHLC K-line chart |
+| Gaussian | `GaussianDemo.swift` | Chart Types | WiFi spectrum: single/multi-AP Gaussian bell curves |
 | Interpolation | `InterpolationDemo.swift` | Interpolation | Linear, Catmull-Rom, clamped cubic, stepped, gaussian |
 | SplineOvershoot | `SplineOvershootDemo.swift` | Interpolation | Catmull-Rom vs clamped cubic overshoot comparison |
 | Interactions | `InteractionsDemo.swift` | Interaction | Hover, tap, and zoom gesture callbacks |
@@ -31,6 +32,7 @@ DemoApp
 └── Sources/DemoApp/
     ├── BasicChartsDemo
     ├── CandlestickDemo
+    ├── GaussianDemo
     ├── CrosshairDemo
     ├── DetailOverviewDemo
     ├── InteractionsDemo
