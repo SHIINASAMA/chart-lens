@@ -11,30 +11,32 @@ The DemoApp is a macOS app inside the ChartLens Xcode project. It contains inter
 
 ## Demos
 
-| Demo | File | Description |
-|------|------|-------------|
-| BasicCharts | `BasicChartsDemo.swift` | Line, area, and dot charts |
-| Candlestick | `CandlestickDemo.swift` | OHLC K-line chart |
-| Crosshair | `CrosshairDemo.swift` | Crosshair overlay with hover tracking |
-| Interpolation | `InterpolationDemo.swift` | Linear, Catmull-Rom, clamped cubic, stepped, gaussian |
-| Interactions | `InteractionsDemo.swift` | Hover, tap, and zoom gesture callbacks |
-| Overlay | `OverlayDemo.swift` | Custom overlay injection |
-| DetailOverview | `DetailOverviewDemo.swift` | Linked overview+detail chart pair |
+| Demo | File | Section | Description |
+|------|------|---------|-------------|
+| BasicCharts | `BasicChartsDemo.swift` | Chart Types | Line, area, dot, step, multi-series, custom axis |
+| Candlestick | `CandlestickDemo.swift` | Chart Types | OHLC K-line chart |
+| Interpolation | `InterpolationDemo.swift` | Interpolation | Linear, Catmull-Rom, clamped cubic, stepped, gaussian |
+| SplineOvershoot | `SplineOvershootDemo.swift` | Interpolation | Catmull-Rom vs clamped cubic overshoot comparison |
+| Interactions | `InteractionsDemo.swift` | Interaction | Hover, tap, and zoom gesture callbacks |
+| Crosshair | `CrosshairDemo.swift` | Interaction | Crosshair overlay with hover tracking |
+| DetailOverview | `DetailOverviewDemo.swift` | Composition | Linked overview+detail chart pair |
+| Overlay | `OverlayDemo.swift` | Composition | Custom overlay injection (tooltip, labels, threshold) |
 
 ## Architecture
 
 ```
 DemoApp
-├── DemoPage enum (sidebar navigation)
+├── DemoPage enum (sidebar navigation with sections)
 ├── DemoCard (reusable card wrapper)
-└── Demos/
+└── Sources/DemoApp/
     ├── BasicChartsDemo
     ├── CandlestickDemo
     ├── CrosshairDemo
-    ├── InterpolationDemo
+    ├── DetailOverviewDemo
     ├── InteractionsDemo
+    ├── InterpolationDemo
     ├── OverlayDemo
-    └── DetailOverviewDemo
+    └── SplineOvershootDemo
 ```
 
-Each demo is a self-contained SwiftUI View. `DemoApp.swift` defines the `NavigationSplitView` shell with a `DemoPage` enum-based sidebar.
+Each demo is a self-contained SwiftUI View. `DemoApp.swift` defines the `NavigationSplitView` shell with a sectioned sidebar (`Chart Types`, `Interpolation`, `Interaction`, `Composition`).

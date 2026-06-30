@@ -7,7 +7,7 @@ A universal, data-driven chart rendering library for SwiftUI. Domain-agnostic �
 - **Generic overlay injection** — all business-specific rendering (tooltips, labels, heatmaps) is injected via a `ViewBuilder` closure
 - **5 interpolation modes** — linear, Catmull-Rom, clamped cubic, step, gaussian
 - **Detail + Overview** — linked chart pair with draggable range selector for zoom/pan
-- **Hit testing** — nearest-point detection within 20px radius across all series
+- **Hit testing** — X-axis nearest-point search across all series
 - **Zoom gesture** — drag-to-zoom with data-space coordinate mapping
 - **macOS 14+ / iOS 17+** with Swift 6.0
 
@@ -156,10 +156,9 @@ SwiftUI's `onChange(of:)` fires **after** `body` computation. When `DetailOvervi
 
 ## Demo
 
-Open `ChartLensDemo/ChartLensDemo.xcodeproj` in Xcode. The demo app includes:
+Open `ChartLens.xcodeproj` in Xcode and run the **DemoApp** scheme. The sidebar groups demos into sections:
 
-- **Basic Charts** — line, area, dot, step, multi-series, custom axis
-- **Interpolation** — all 5 modes side by side
-- **Detail + Overview** — linked chart with RangeSelector
-- **Interactions** — hover, tap, zoom gesture
-- **Custom Overlays** — tooltip, data labels, threshold line
+- **Chart Types** — basic charts (line, area, dot, step), candlestick
+- **Interpolation** — 5 interpolation modes, spline overshoot comparison
+- **Interaction** — hover & tap callbacks, crosshair overlay
+- **Composition** — detail + overview, custom overlays
