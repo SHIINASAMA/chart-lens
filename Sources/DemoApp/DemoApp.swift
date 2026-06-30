@@ -15,8 +15,27 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(DemoPage.allCases, id: \.self, selection: $selection) { page in
-                Text(page.title)
+            List(selection: $selection) {
+                Section("Chart Types") {
+                    ForEach(DemoPage.chartTypePages, id: \.self) { page in
+                        Label(page.title, systemImage: page.icon)
+                    }
+                }
+                Section("Interpolation") {
+                    ForEach(DemoPage.interpolationPages, id: \.self) { page in
+                        Label(page.title, systemImage: page.icon)
+                    }
+                }
+                Section("Interaction") {
+                    ForEach(DemoPage.interactionPages, id: \.self) { page in
+                        Label(page.title, systemImage: page.icon)
+                    }
+                }
+                Section("Composition") {
+                    ForEach(DemoPage.compositionPages, id: \.self) { page in
+                        Label(page.title, systemImage: page.icon)
+                    }
+                }
             }
             .navigationTitle("ChartLens")
         } detail: {
@@ -32,24 +51,53 @@ struct ContentView: View {
 }
 
 enum DemoPage: String, CaseIterable {
+    // Chart Types
     case basicCharts = "Basic Charts"
-    case interpolation = "Interpolation"
     case candlestick = "Candlestick"
-    case detailOverview = "Detail + Overview"
-    case interactions = "Interactions"
+
+    // Interpolation
+    case interpolation = "Interpolation Modes"
+    case splineOvershoot = "Spline Overshoot"
+
+    // Interaction
+    case interactions = "Hover & Tap"
     case crosshair = "Crosshair"
+
+    // Composition
+    case detailOverview = "Detail + Overview"
     case overlays = "Custom Overlays"
 
     var title: String { rawValue }
 
+    var icon: String {
+        switch self {
+        case .basicCharts: "chart.line.uptrend.xyaxis"
+        case .candlestick: "chart.bar.doc.horizontal"
+        case .interpolation: "waveform.path"
+        case .splineOvershoot: "arrow.triangle.branch"
+        case .interactions: "cursorarrow.click.2"
+        case .crosshair: "scope"
+        case .detailOverview: "rectangle.split.2x1"
+        case .overlays: "square.on.square"
+        }
+    }
+
+    // MARK: - Groups
+
+    static let chartTypePages: [DemoPage] = [.basicCharts, .candlestick]
+    static let interpolationPages: [DemoPage] = [.interpolation, .splineOvershoot]
+    static let interactionPages: [DemoPage] = [.interactions, .crosshair]
+    static let compositionPages: [DemoPage] = [.detailOverview, .overlays]
+
     @ViewBuilder var view: some View {
         switch self {
         case .basicCharts: BasicChartsDemo()
-        case .interpolation: InterpolationDemo()
         case .candlestick: CandlestickDemo()
-        case .detailOverview: DetailOverviewDemo()
+        case .interpolation: InterpolationDemo()
+        case .splineOvershoot: SplineOvershootDemo()
         case .interactions: InteractionsDemo()
         case .crosshair: CrosshairDemo()
+        case .detailOverview: DetailOverviewDemo()
         case .overlays: OverlayDemo()
         }
     }

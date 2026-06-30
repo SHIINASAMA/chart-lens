@@ -20,6 +20,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C39E092759668D2E5E871E0A"
                BuildableName = "ChartLensTests.xctest"
+               BlueprintName = "ChartLensTests"
                ReferencedContainer = "container:ChartLens.xcodeproj">
             </BuildableReference>
          </TestableReference>

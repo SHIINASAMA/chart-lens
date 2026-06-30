@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FA828638A62203D380D8D9D4"
                BuildableName = "ChartLens.framework"
+               BlueprintName = "ChartLens"
                ReferencedContainer = "container:ChartLens.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -35,6 +36,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C39E092759668D2E5E871E0A"
                BuildableName = "ChartLensTests.xctest"
+               BlueprintName = "ChartLensTests"
                ReferencedContainer = "container:ChartLens.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -63,6 +65,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FA828638A62203D380D8D9D4"
             BuildableName = "ChartLens.framework"
+            BlueprintName = "ChartLens"
             ReferencedContainer = "container:ChartLens.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
